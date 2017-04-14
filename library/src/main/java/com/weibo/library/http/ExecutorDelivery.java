@@ -17,8 +17,8 @@
 package com.weibo.library.http;
 
 import android.os.Handler;
-import com.weibo.volley.client.ProgressListener;
-import com.weibo.volley.interf.IDelivery;
+import com.weibo.library.client.ProgressListener;
+import com.weibo.library.interf.IDelivery;
 import java.util.concurrent.Executor;
 
 /**

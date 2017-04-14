@@ -16,9 +16,9 @@
 package com.weibo.library.http;
 
 import android.os.Process;
-import com.weibo.volley.interf.ICache;
-import com.weibo.volley.interf.IDelivery;
-import com.weibo.volley.interf.IPersistence;
+import com.weibo.library.interf.ICache;
+import com.weibo.library.interf.IDelivery;
+import com.weibo.library.interf.IPersistence;
 import java.util.concurrent.BlockingQueue;
 
 /**

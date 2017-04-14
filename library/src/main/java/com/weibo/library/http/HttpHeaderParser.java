@@ -18,7 +18,7 @@ package com.weibo.library.http;
 
 import android.icu.text.SimpleDateFormat;
 import android.os.Build;
-import com.weibo.volley.interf.ICache;
+import com.weibo.library.interf.ICache;
 import java.text.ParseException;
 import java.util.Map;
 

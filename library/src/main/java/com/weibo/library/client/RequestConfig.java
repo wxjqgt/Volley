@@ -15,8 +15,8 @@
  */
 package com.weibo.library.client;
 
-import com.weibo.volley.http.DefaultRetryPolicy;
-import com.weibo.volley.http.RetryPolicy;
+import com.weibo.library.http.DefaultRetryPolicy;
+import com.weibo.library.http.RetryPolicy;
 
 /**
  * 记录信息

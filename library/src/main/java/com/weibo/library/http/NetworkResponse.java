@@ -16,7 +16,7 @@
 
 package com.weibo.library.http;
 
-import com.weibo.volley.toolbox.HttpStatus;
+import com.weibo.library.toolbox.HttpStatus;
 import java.util.Collections;
 import java.util.Map;
 

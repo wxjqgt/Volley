@@ -15,12 +15,12 @@
  */
 package com.weibo.library.client;
 
-import com.weibo.volley.Volley;
-import com.weibo.volley.http.HttpHeaderParser;
-import com.weibo.volley.http.NetworkResponse;
-import com.weibo.volley.http.Request;
-import com.weibo.volley.http.Response;
-import com.weibo.volley.toolbox.HttpParamsEntry;
+import com.weibo.library.Volley;
+import com.weibo.library.http.HttpHeaderParser;
+import com.weibo.library.http.NetworkResponse;
+import com.weibo.library.http.Request;
+import com.weibo.library.http.Response;
+import com.weibo.library.toolbox.HttpParamsEntry;
 import java.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;

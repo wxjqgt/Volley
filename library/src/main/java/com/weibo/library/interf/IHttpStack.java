@@ -15,9 +15,9 @@
  */
 package com.weibo.library.interf;
 
-import com.weibo.volley.http.Request;
-import com.weibo.volley.http.URLHttpResponse;
-import com.weibo.volley.toolbox.HttpParamsEntry;
+import com.weibo.library.http.Request;
+import com.weibo.library.http.URLHttpResponse;
+import com.weibo.library.toolbox.HttpParamsEntry;
 import java.io.IOException;
 import java.util.ArrayList;
 

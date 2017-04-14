@@ -16,10 +16,10 @@
 
 package com.weibo.library.http;
 
-import com.weibo.volley.Volley;
-import com.weibo.volley.interf.IHttpStack;
-import com.weibo.volley.toolbox.HTTPSTrustManager;
-import com.weibo.volley.toolbox.HttpParamsEntry;
+import com.weibo.library.Volley;
+import com.weibo.library.interf.IHttpStack;
+import com.weibo.library.toolbox.HTTPSTrustManager;
+import com.weibo.library.toolbox.HttpParamsEntry;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

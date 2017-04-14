@@ -16,7 +16,7 @@
 package com.weibo.library.client;
 
 import android.graphics.Bitmap;
-import com.weibo.volley.http.VolleyError;
+import com.weibo.library.http.VolleyError;
 import java.util.Map;
 
 /**

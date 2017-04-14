@@ -16,7 +16,7 @@
 
 package com.weibo.library.http;
 
-import com.weibo.volley.interf.ICache;
+import com.weibo.library.interf.ICache;
 import java.util.Map;
 
 /**

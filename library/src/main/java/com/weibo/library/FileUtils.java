@@ -1,6 +1,6 @@
 package com.weibo.library;
 
-import com.weibo.volley.client.App;
+import com.weibo.library.client.App;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;

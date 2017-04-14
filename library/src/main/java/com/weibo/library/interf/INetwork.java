@@ -16,9 +16,9 @@
 
 package com.weibo.library.interf;
 
-import com.weibo.volley.http.NetworkResponse;
-import com.weibo.volley.http.Request;
-import com.weibo.volley.http.VolleyError;
+import com.weibo.library.http.NetworkResponse;
+import com.weibo.library.http.Request;
+import com.weibo.library.http.VolleyError;
 
 /**
  * An interface for performing requests.

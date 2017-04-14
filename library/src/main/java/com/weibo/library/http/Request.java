@@ -17,11 +17,11 @@ package com.weibo.library.http;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import com.weibo.volley.client.HttpCallback;
-import com.weibo.volley.client.ProgressListener;
-import com.weibo.volley.client.RequestConfig;
-import com.weibo.volley.interf.ICache;
-import com.weibo.volley.toolbox.HttpParamsEntry;
+import com.weibo.library.client.HttpCallback;
+import com.weibo.library.client.ProgressListener;
+import com.weibo.library.client.RequestConfig;
+import com.weibo.library.interf.ICache;
+import com.weibo.library.toolbox.HttpParamsEntry;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;

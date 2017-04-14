@@ -18,11 +18,11 @@ package com.weibo.library.http;
 
 import android.os.Handler;
 import android.os.Looper;
-import com.weibo.volley.interf.ICache;
-import com.weibo.volley.interf.IDelivery;
-import com.weibo.volley.interf.IHttpStack;
-import com.weibo.volley.interf.INetwork;
-import com.weibo.volley.toolbox.DiskBasedCache;
+import com.weibo.library.interf.ICache;
+import com.weibo.library.interf.IDelivery;
+import com.weibo.library.interf.IHttpStack;
+import com.weibo.library.interf.INetwork;
+import com.weibo.library.toolbox.DiskBasedCache;
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;

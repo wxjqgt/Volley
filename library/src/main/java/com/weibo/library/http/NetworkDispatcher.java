@@ -20,9 +20,9 @@ import android.annotation.TargetApi;
 import android.net.TrafficStats;
 import android.os.Build;
 import android.os.Process;
-import com.weibo.volley.interf.ICache;
-import com.weibo.volley.interf.IDelivery;
-import com.weibo.volley.interf.INetwork;
+import com.weibo.library.interf.ICache;
+import com.weibo.library.interf.IDelivery;
+import com.weibo.library.interf.INetwork;
 import java.util.concurrent.BlockingQueue;
 
 /**

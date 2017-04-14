@@ -15,10 +15,10 @@
  */
 package com.weibo.library.interf;
 
-import com.weibo.volley.client.ProgressListener;
-import com.weibo.volley.http.Request;
-import com.weibo.volley.http.Response;
-import com.weibo.volley.http.VolleyError;
+import com.weibo.library.client.ProgressListener;
+import com.weibo.library.http.Request;
+import com.weibo.library.http.Response;
+import com.weibo.library.http.VolleyError;
 
 /**
  * 分发器，将异步线程中的结果响应到UI线程中

@@ -17,16 +17,16 @@ package com.weibo.library;
 
 import android.icu.util.TimeUnit;
 import android.text.TextUtils;
-import com.weibo.volley.client.FormRequest;
-import com.weibo.volley.client.HttpCallback;
-import com.weibo.volley.client.HttpParams;
-import com.weibo.volley.client.JsonRequest;
-import com.weibo.volley.client.ProgressListener;
-import com.weibo.volley.client.RequestConfig;
-import com.weibo.volley.http.Request;
-import com.weibo.volley.http.RequestQueue;
-import com.weibo.volley.http.RetryPolicy;
-import com.weibo.volley.interf.ICache;
+import com.weibo.library.client.FormRequest;
+import com.weibo.library.client.HttpCallback;
+import com.weibo.library.client.HttpParams;
+import com.weibo.library.client.JsonRequest;
+import com.weibo.library.client.ProgressListener;
+import com.weibo.library.client.RequestConfig;
+import com.weibo.library.http.Request;
+import com.weibo.library.http.RequestQueue;
+import com.weibo.library.http.RetryPolicy;
+import com.weibo.library.interf.ICache;
 import java.io.File;
 
 /**
