@@ -1,4 +1,4 @@
-package com.weibo.library;
+package com.weibo.library.util;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;

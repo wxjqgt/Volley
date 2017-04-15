@@ -29,6 +29,7 @@ import com.weibo.library.http.Request;
 import com.weibo.library.http.RequestQueue;
 import com.weibo.library.http.RetryPolicy;
 import com.weibo.library.interf.ICache;
+import com.weibo.library.util.FileUtils;
 import java.io.File;
 
 /**

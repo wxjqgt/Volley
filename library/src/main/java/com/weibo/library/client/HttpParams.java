@@ -17,7 +17,7 @@
 package com.weibo.library.client;
 
 import android.text.TextUtils;
-import com.weibo.library.FileUtils;
+import com.weibo.library.util.FileUtils;
 import com.weibo.library.toolbox.HttpParamsEntry;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -18,7 +18,7 @@ package com.weibo.library.toolbox;
 
 import android.os.SystemClock;
 import android.util.Log;
-import com.weibo.library.FileUtils;
+import com.weibo.library.util.FileUtils;
 import com.weibo.library.interf.ICache;
 import java.io.BufferedInputStream;
 import java.io.EOFException;

@@ -19,7 +19,7 @@ package com.weibo.library.http;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
 import android.util.Log;
-import com.weibo.library.FileUtils;
+import com.weibo.library.util.FileUtils;
 import com.weibo.library.interf.ICache;
 import com.weibo.library.interf.IHttpStack;
 import com.weibo.library.interf.INetwork;
