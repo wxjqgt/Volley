@@ -16,7 +16,7 @@
 
 package com.weibo.library.http;
 
-import com.weibo.library.Volley;
+import com.weibo.library.VolleyGo;
 import com.weibo.library.interf.IHttpStack;
 import com.weibo.library.toolbox.HTTPSTrustManager;
 import com.weibo.library.toolbox.HttpParamsEntry;
@@ -157,24 +157,24 @@ public class HttpConnectStack implements IHttpStack {
   /* package */
   static void setConnectionParametersForRequest(HttpURLConnection connection, Request<?> request)
       throws IOException {
-    Volley.Method method = request.getMethod();
-    if (method == Volley.Method.GET) {
+    VolleyGo.Method method = request.getMethod();
+    if (method == VolleyGo.Method.GET) {
       connection.setRequestMethod("GET");
-    } else if (method == Volley.Method.DELETE) {
+    } else if (method == VolleyGo.Method.DELETE) {
       connection.setRequestMethod("DELETE");
-    } else if (method == Volley.Method.POST) {
+    } else if (method == VolleyGo.Method.POST) {
       connection.setRequestMethod("POST");
       addBodyIfExists(connection, request);
-    } else if (method == Volley.Method.PUT) {
+    } else if (method == VolleyGo.Method.PUT) {
       connection.setRequestMethod("PUT");
       addBodyIfExists(connection, request);
-    } else if (method == Volley.Method.HEAD) {
+    } else if (method == VolleyGo.Method.HEAD) {
       connection.setRequestMethod("HEAD");
-    } else if (method == Volley.Method.OPTIONS) {
+    } else if (method == VolleyGo.Method.OPTIONS) {
       connection.setRequestMethod("OPTIONS");
-    } else if (method == Volley.Method.TRACE) {
+    } else if (method == VolleyGo.Method.TRACE) {
       connection.setRequestMethod("TRACE");
-    } else if (method == Volley.Method.PATCH) {
+    } else if (method == VolleyGo.Method.PATCH) {
       connection.setRequestMethod("PATCH");
       addBodyIfExists(connection, request);
     } else {

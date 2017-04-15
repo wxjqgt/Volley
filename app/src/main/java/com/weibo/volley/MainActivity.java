@@ -3,16 +3,15 @@ package com.weibo.volley;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import com.google.gson.Gson;
-import com.weibo.library.Volley;
+import com.weibo.library.VolleyGo;
 import com.weibo.library.client.HttpCallback;
 import com.weibo.library.client.HttpParams;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
-import io.reactivex.internal.operators.observable.ObservableFromIterable;
-import java.util.Map;
-import retrofit2.http.Multipart;
-import retrofit2.http.POST;
-import retrofit2.http.PartMap;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 import static com.weibo.volley.FaxianApi.url;
 
@@ -52,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements HttpCallback.Succ
     params.put("lon", "");
     params.put("lat", "");
     params.put("format", "json");
-    Volley.post()
+    VolleyGo.post()
         .url(url + "v6/faxian_new2.php?format=json")
         .params(params)
         .onSuccessWithString(this)
@@ -60,9 +59,16 @@ public class MainActivity extends AppCompatActivity implements HttpCallback.Succ
   }
 
   @Override public void onSuccess(String t) {
-    final Faxian faxian = gson.fromJson(t, Faxian.class);
-    ObservableFromIterable.fromIterable(faxian.getFaxian_list())
-        .forEach(new Consumer<Faxian.FaxianListBean>() {
+    Observable.just(gson.fromJson(t, Faxian.class))
+        .flatMap(new Function<Faxian, ObservableSource<Faxian.FaxianListBean>>() {
+          @Override public ObservableSource<Faxian.FaxianListBean> apply(Faxian faxian)
+              throws Exception {
+            return Observable.fromIterable(faxian.getFaxian_list());
+          }
+        })
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Consumer<Faxian.FaxianListBean>() {
           @Override public void accept(Faxian.FaxianListBean faxianListBean) throws Exception {
             System.out.println(faxianListBean.getTitle());
           }
@@ -70,9 +76,3 @@ public class MainActivity extends AppCompatActivity implements HttpCallback.Succ
   }
 }
 
-interface FaxianApi {
-  String url = "http://api.meishi.cc/";
-
-  @POST("v6/faxian_new2.php?format=json") @Multipart Observable<Faxian> getData(
-      @PartMap Map<String, String> params);
-}

@@ -23,6 +23,8 @@ import com.weibo.library.client.HttpParams;
 import com.weibo.library.client.JsonRequest;
 import com.weibo.library.client.ProgressListener;
 import com.weibo.library.client.RequestConfig;
+import com.weibo.library.constant.ContentType;
+import com.weibo.library.constant.Method;
 import com.weibo.library.http.Request;
 import com.weibo.library.http.RequestQueue;
 import com.weibo.library.http.RetryPolicy;
@@ -34,9 +36,9 @@ import java.io.File;
  *
  * @author weibo on 17/04/14.
  */
-public class Volley {
+public class VolleyGo {
 
-  private Volley() {
+  private VolleyGo() {
   }
 
   public final static File CACHE_FOLDER = FileUtils.getExternalCacheDir("RxVolley");
@@ -68,20 +70,6 @@ public class Volley {
   }
 
   /**
-   * 请求方式:FORM表单,或 JSON内容传递
-   */
-  public enum ContentType {
-    FORM, JSON
-  }
-
-  /**
-   * 支持的请求方式
-   */
-  public enum Method {
-    GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE, PATCH
-  }
-
-  /**
    * 构建器
    */
   public static class Builder {
@@ -100,11 +88,42 @@ public class Volley {
     private ProgressListener progressListener;
     private RequestConfig httpConfig = new RequestConfig();
 
+    private void checkParmsNotNull() {
+      if (this.params == null) {
+        this.params = new HttpParams();
+      }
+    }
+
     /**
      * Http请求参数
      */
     public Builder params(HttpParams params) {
       this.params = params;
+      return this;
+    }
+
+    public Builder addParam(String key, String value) {
+      checkParmsNotNull();
+      this.params.put(key, value);
+      return this;
+    }
+
+    public Builder addParam(String key, int value) {
+      checkParmsNotNull();
+      this.params.put(key, value);
+      return this;
+    }
+
+
+    public Builder addParam(String key, byte[] value) {
+      checkParmsNotNull();
+      this.params.put(key, value);
+      return this;
+    }
+
+    public Builder addParam(String key, File value) {
+      checkParmsNotNull();
+      this.params.put(key, value);
       return this;
     }
 
@@ -122,56 +141,64 @@ public class Volley {
     public Builder onPreStart(HttpCallback.PreStart callback) {
       if (callback == null) {
         throw new IllegalStateException("the PreStartcallback is null");
-      } this.mPreStart = callback;
+      }
+      this.mPreStart = callback;
       return this;
     }
 
     public Builder onPreHttp(HttpCallback.PreHttp callback) {
       if (callback == null) {
         throw new IllegalStateException("the PreHttpcallback is null");
-      } this.mPreHttp = callback;
+      }
+      this.mPreHttp = callback;
       return this;
     }
 
     public Builder onSuccessWithString(HttpCallback.SuccessWithString callback) {
       if (callback == null) {
         throw new IllegalStateException("the SuccessWithStringcallback is null");
-      } this.mSuccessWithString = callback;
+      }
+      this.mSuccessWithString = callback;
       return this;
     }
 
     public Builder onSuccessWithByte(HttpCallback.SuccessWithByte callback) {
       if (callback == null) {
         throw new IllegalStateException("the SuccessWithBytecallback is null");
-      } this.mSuccessWithByte = callback;
+      }
+      this.mSuccessWithByte = callback;
       return this;
     }
 
     public Builder onSuccessInAsync(HttpCallback.SuccessInAsync callback) {
       if (callback == null) {
         throw new IllegalStateException("the SuccessInAsynccallback is null");
-      } this.mSuccessInAsync = callback;
+      }
+      this.mSuccessInAsync = callback;
       return this;
     }
 
     public Builder onFailureWithMsg(HttpCallback.FailureWithMsg callback) {
       if (callback == null) {
         throw new IllegalStateException("the FailureWithMsgcallback is null");
-      } this.mFailureWithMsg = callback;
+      }
+      this.mFailureWithMsg = callback;
       return this;
     }
 
     public Builder onFailureWithError(HttpCallback.FailureWithError callback) {
       if (callback == null) {
         throw new IllegalStateException("the FailureWithErrorcallback is null");
-      } this.mFailureWithError = callback;
+      }
+      this.mFailureWithError = callback;
       return this;
     }
 
     public Builder onFinish(HttpCallback.Finish callback) {
       if (callback == null) {
         throw new IllegalStateException("the Finishcallback is null");
-      } this.mFinish = callback;
+      }
+      this.mFinish = callback;
       return this;
     }
 
@@ -298,7 +325,9 @@ public class Volley {
         if (params == null) {
           params = new HttpParams();
         } else {
-          if (httpConfig.mMethod == Method.GET) httpConfig.mUrl += params.getUrlParams();
+          if (httpConfig.mMethod == Method.GET) {
+            httpConfig.mUrl += params.getUrlParams();
+          }
         }
 
         if (httpConfig.mShouldCache == null) {
@@ -343,7 +372,7 @@ public class Volley {
   }
 
   public static Builder get() {
-   return new Builder().httpMethod(Method.GET);
+    return new Builder().httpMethod(Method.GET);
   }
 
   public static Builder post() {

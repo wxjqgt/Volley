@@ -17,7 +17,7 @@ package com.weibo.library.http;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import com.weibo.library.Volley;
+import com.weibo.library.VolleyGo;
 import com.weibo.library.client.HttpCallback;
 import com.weibo.library.client.ProgressListener;
 import com.weibo.library.client.RequestConfig;
@@ -77,7 +77,7 @@ public abstract class Request<T> implements Comparable<Request<T>> {
     mProgressListener = listener;
   }
 
-  public Volley.Method getMethod() {
+  public VolleyGo.Method getMethod() {
     return mConfig.mMethod;
   }
 

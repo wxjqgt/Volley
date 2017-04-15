@@ -15,7 +15,7 @@
  */
 package com.weibo.library.client;
 
-import com.weibo.library.Volley;
+import com.weibo.library.VolleyGo;
 import com.weibo.library.http.HttpHeaderParser;
 import com.weibo.library.http.NetworkResponse;
 import com.weibo.library.http.Request;
@@ -52,7 +52,7 @@ public class FormRequest extends Request<byte[]> {
   }
 
   @Override public String getCacheKey() {
-    if (getMethod() == Volley.Method.POST) {
+    if (getMethod() == VolleyGo.Method.POST) {
       return getUrl() + mParams.getUrlParams();
     } else {
       return getUrl();
@@ -122,7 +122,7 @@ public class FormRequest extends Request<byte[]> {
       if (progListener != null) {
         this.transferred++;
         if ((transferred % 20 == 0) && (transferred <= fileLength)) {
-          Volley.getRequestQueue()
+          VolleyGo.getRequestQueue()
               .getDelivery()
               .postProgress(this.progListener, this.transferred, fileLength);
         }

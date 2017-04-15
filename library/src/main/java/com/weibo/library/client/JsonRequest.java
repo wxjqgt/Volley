@@ -16,7 +16,7 @@
 
 package com.weibo.library.client;
 
-import com.weibo.library.Volley;
+import com.weibo.library.VolleyGo;
 import com.weibo.library.http.HttpHeaderParser;
 import com.weibo.library.http.NetworkResponse;
 import com.weibo.library.http.Request;
@@ -73,7 +73,7 @@ public class JsonRequest extends Request<byte[]> {
   }
 
   @Override public String getCacheKey() {
-    if (getMethod() == Volley.Method.POST) {
+    if (getMethod() == VolleyGo.Method.POST) {
       return getUrl() + mParams.getJsonParams();
     } else {
       return getUrl();
