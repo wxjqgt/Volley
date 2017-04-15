@@ -10,6 +10,7 @@ android {
     versionCode 1
     versionName "1.0"
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
   }
   buildTypes {
     release {
@@ -17,6 +18,7 @@ android {
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
   }
+
 }
 
 dependencies {
@@ -29,4 +31,7 @@ dependencies {
   testCompile 'junit:junit:4.12'
   compile project(':library')
   compile 'com.google.code.gson:gson:2.8.0'
+  compile 'com.squareup.retrofit2:retrofit:2.2.0'
+  compile 'com.squareup.retrofit2:adapter-rxjava2:2.2.0'
+  compile 'com.squareup.retrofit2:converter-gson:2.2.0'
 }
