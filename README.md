@@ -10,15 +10,18 @@
   问题供大家使用！
 * 由于移除了Rxjava的支持，叫RxVolley好像不合适，so使用除了RxVolley改为Volley外，其他大部分相同
 * 本人习惯链式调用，所以改成了链式，源码也不复杂，大家一看就能懂！
+* use：
+```
 	Volley.post()
-        .url(url)
-        .params(params)
-        .onSuccessWithString(new HttpCallback.SuccessWithString() {
-            @Override public void onSuccess(String t) {
-              System.out.println("t = " + t);
-            }
-        })
-        .doTask();
+	        .url(url)
+	        .params(params)
+	        .onSuccessWithString(new HttpCallback.SuccessWithString() {
+	            @Override public void onSuccess(String t) {
+	              System.out.println("t = " + t);
+	            }
+	        })
+	        .doTask();
+	        ```
 * 暂时不能用kymjs的okhttp扩展，如果大家有需要会修改以完美支持
 * 图片加载的扩展也删了，我喜欢用专门的加载框架如Glide，要是大家有需要我添加回去
 * 暂时就只有这么多了
