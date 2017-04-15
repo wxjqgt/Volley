@@ -11,8 +11,7 @@
 * 由于移除了Rxjava的支持，叫RxVolley好像不合适，so使用除了RxVolley改为Volley外，其他大部分相同
 * 本人习惯链式调用，所以改成了链式，源码也不复杂，大家一看就能懂！
 * use：
-```
-	Volley.post()
+```Volley.post()
 	        .url(url)
 	        .params(params)
 	        .onSuccessWithString(new HttpCallback.SuccessWithString() {
@@ -22,9 +21,9 @@
 	        })
 	        .doTask();
 	        ```
-* 暂时不能用kymjs的okhttp扩展，如果大家有需要会修改以完美支持
-* 图片加载的扩展也删了，我喜欢用专门的加载框架如Glide，要是大家有需要我添加回去
-* 暂时就只有这么多了
-* 另外这个库是精简了kymjs张涛的RxVolley的作品，本无意侵犯版权，如果侵犯了权益，请告知，我会马上删除，谢谢！
+*  暂时不能用kymjs的okhttp扩展，如果大家有需要会修改以完美支持
+*  图片加载的扩展也删了，我喜欢用专门的加载框架如Glide，要是大家有需要我添加回去
+*  暂时就只有这么多了
+*  另外这个库是精简了kymjs张涛的RxVolley的作品，本无意侵犯版权，如果侵犯了权益，请告知，我会马上删除，谢谢！
 
 email：gt1254094162@163.com
