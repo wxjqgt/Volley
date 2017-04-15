@@ -15,6 +15,7 @@
  */
 package com.weibo.library.client;
 
+import com.weibo.library.Volley;
 import com.weibo.library.http.DefaultRetryPolicy;
 import com.weibo.library.http.RetryPolicy;
 
@@ -31,7 +32,7 @@ public class RequestConfig {
 
     public boolean mUseServerControl; //服务器控制缓存时间,为true时mCacheTime无效
 
-    public int mMethod; // 请求方式
+    public Volley.Method mMethod; // 请求方式
 
     public Boolean mShouldCache = null; // 是否缓存本次请求,默认为智能模式,get缓存post不缓存
 

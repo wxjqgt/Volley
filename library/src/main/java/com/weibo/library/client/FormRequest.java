@@ -34,9 +34,17 @@ import java.util.Map;
 public class FormRequest extends Request<byte[]> {
 
   private final HttpParams mParams;
+  private HttpCallback.SuccessWithString mSuccessWithString;
+  private HttpCallback.SuccessWithByte mSuccessWithByte;
 
-  public FormRequest(RequestConfig config, HttpParams params, HttpCallback callback) {
-    super(config, callback);
+  public FormRequest(RequestConfig config, HttpParams params, HttpCallback.PreHttp preHttp,
+      HttpCallback.SuccessWithString successWithString,
+      HttpCallback.SuccessWithByte successWithByte, HttpCallback.SuccessInAsync successInAsync,
+      HttpCallback.FailureWithMsg failureWithMsg, HttpCallback.FailureWithError failureWithError,
+      HttpCallback.Finish finish) {
+    super(config, preHttp, successInAsync, failureWithMsg, failureWithError, finish);
+    mSuccessWithString = successWithString;
+    mSuccessWithByte = successWithByte;
     if (params == null) {
       params = new HttpParams();
     }
@@ -67,7 +75,8 @@ public class FormRequest extends Request<byte[]> {
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     try {
       if (mProgressListener != null) {
-        mParams.writeTo(new CountingOutputStream(bos, mParams.getContentLength(), mProgressListener));
+        mParams.writeTo(
+            new CountingOutputStream(bos, mParams.getContentLength(), mProgressListener));
       } else {
         mParams.writeTo(bos);
       }
@@ -78,12 +87,16 @@ public class FormRequest extends Request<byte[]> {
   }
 
   @Override public Response<byte[]> parseNetworkResponse(NetworkResponse response) {
-    return Response.success(response.data, response.headers, HttpHeaderParser.parseCacheHeaders(getUseServerControl(), getCacheTime(), response));
+    return Response.success(response.data, response.headers,
+        HttpHeaderParser.parseCacheHeaders(getUseServerControl(), getCacheTime(), response));
   }
 
   @Override protected void deliverResponse(Map<String, String> headers, final byte[] response) {
-    if (mCallback != null) {
-      mCallback.onSuccess(headers, response);
+    if (mSuccessWithByte != null) {
+      mSuccessWithByte.onSuccess(headers, response);
+    }
+    if (mSuccessWithString != null) {
+      mSuccessWithString.onSuccess(new String(response));
     }
   }
 
@@ -96,7 +109,8 @@ public class FormRequest extends Request<byte[]> {
     private long transferred;
     private long fileLength;
 
-    public CountingOutputStream(final OutputStream out, long fileLength, final ProgressListener listener) {
+    public CountingOutputStream(final OutputStream out, long fileLength,
+        final ProgressListener listener) {
       super(out);
       this.fileLength = fileLength;
       this.progListener = listener;
@@ -108,7 +122,9 @@ public class FormRequest extends Request<byte[]> {
       if (progListener != null) {
         this.transferred++;
         if ((transferred % 20 == 0) && (transferred <= fileLength)) {
-          Volley.getRequestQueue().getDelivery().postProgress(this.progListener, this.transferred, fileLength);
+          Volley.getRequestQueue()
+              .getDelivery()
+              .postProgress(this.progListener, this.transferred, fileLength);
         }
       }
     }

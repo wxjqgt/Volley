@@ -32,59 +32,63 @@ import java.util.Map;
  */
 public class JsonRequest extends Request<byte[]> {
 
-    private final String mRequestBody;
-    private final HttpParams mParams;
+  private final String mRequestBody;
+  private final HttpParams mParams;
+  private HttpCallback.SuccessWithString mSuccessWithString;
+  private HttpCallback.SuccessWithByte mSuccessWithByte;
 
-    public JsonRequest(RequestConfig config, HttpParams params, HttpCallback callback) {
-        super(config, callback);
-        mRequestBody = params.getJsonParams();
-        mParams = params;
-    }
+  public JsonRequest(RequestConfig config, HttpParams params, HttpCallback.PreHttp preHttp,
+      HttpCallback.SuccessWithString successWithString,
+      HttpCallback.SuccessWithByte successWithByte, HttpCallback.SuccessInAsync successInAsync,
+      HttpCallback.FailureWithMsg failureWithMsg, HttpCallback.FailureWithError failureWithError,
+      HttpCallback.Finish finish) {
+    super(config, preHttp, successInAsync, failureWithMsg, failureWithError, finish);
+    mSuccessWithString = successWithString;
+    mSuccessWithByte = successWithByte;
 
-    @Override
-    public ArrayList<HttpParamsEntry> getHeaders() {
-        return mParams.getHeaders();
-    }
+    mRequestBody = params.getJsonParams();
+    mParams = params;
+  }
 
-    @Override
-    protected void deliverResponse(Map<String, String> headers, byte[] response) {
-        if (mCallback != null) {
-            mCallback.onSuccess(headers, response);
-        }
-    }
+  @Override public ArrayList<HttpParamsEntry> getHeaders() {
+    return mParams.getHeaders();
+  }
 
-    @Override
-    public Response<byte[]> parseNetworkResponse(NetworkResponse response) {
-        return Response.success(response.data, response.headers,
-                HttpHeaderParser.parseCacheHeaders(getUseServerControl(), getCacheTime(),
-                        response));
+  @Override protected void deliverResponse(Map<String, String> headers, byte[] response) {
+    if (mSuccessWithByte != null) {
+      mSuccessWithByte.onSuccess(headers, response);
     }
+    if (mSuccessWithString != null) {
+      mSuccessWithString.onSuccess(new String(response));
+    }
+  }
 
-    @Override
-    public String getBodyContentType() {
-        return String.format("application/json; charset=%s", getConfig().mEncoding);
-    }
+  @Override public Response<byte[]> parseNetworkResponse(NetworkResponse response) {
+    return Response.success(response.data, response.headers,
+        HttpHeaderParser.parseCacheHeaders(getUseServerControl(), getCacheTime(), response));
+  }
 
-    @Override
-    public String getCacheKey() {
-        if (getMethod() == Volley.Method.POST) {
-            return getUrl() + mParams.getJsonParams();
-        } else {
-            return getUrl();
-        }
-    }
+  @Override public String getBodyContentType() {
+    return String.format("application/json; charset=%s", getConfig().mEncoding);
+  }
 
-    @Override
-    public byte[] getBody() {
-        try {
-            return mRequestBody == null ? null : mRequestBody.getBytes(getConfig().mEncoding);
-        } catch (UnsupportedEncodingException uee) {
-            return null;
-        }
+  @Override public String getCacheKey() {
+    if (getMethod() == Volley.Method.POST) {
+      return getUrl() + mParams.getJsonParams();
+    } else {
+      return getUrl();
     }
+  }
 
-    @Override
-    public Priority getPriority() {
-        return Priority.IMMEDIATE;
+  @Override public byte[] getBody() {
+    try {
+      return mRequestBody == null ? null : mRequestBody.getBytes(getConfig().mEncoding);
+    } catch (UnsupportedEncodingException uee) {
+      return null;
     }
+  }
+
+  @Override public Priority getPriority() {
+    return Priority.IMMEDIATE;
+  }
 }

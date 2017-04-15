@@ -70,32 +70,32 @@ public class Volley {
   /**
    * 请求方式:FORM表单,或 JSON内容传递
    */
-  public interface ContentType {
-    int FORM = 0;
-    int JSON = 1;
+  public enum ContentType {
+    FORM, JSON
   }
 
   /**
    * 支持的请求方式
    */
-  public interface Method {
-    int GET = 0;
-    int POST = 1;
-    int PUT = 2;
-    int DELETE = 3;
-    int HEAD = 4;
-    int OPTIONS = 5;
-    int TRACE = 6;
-    int PATCH = 7;
+  public enum Method {
+    GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE, PATCH
   }
 
   /**
    * 构建器
    */
   public static class Builder {
+
+    private HttpCallback.PreStart mPreStart;
+    private HttpCallback.PreHttp mPreHttp;
+    private HttpCallback.SuccessWithString mSuccessWithString;
+    private HttpCallback.SuccessWithByte mSuccessWithByte;
+    private HttpCallback.SuccessInAsync mSuccessInAsync;
+    private HttpCallback.FailureWithMsg mFailureWithMsg;
+    private HttpCallback.FailureWithError mFailureWithError;
+    private HttpCallback.Finish mFinish;
     private HttpParams params;
-    private int contentType;
-    private HttpCallback callback;
+    private ContentType contentType;
     private Request<?> request;
     private ProgressListener progressListener;
     private RequestConfig httpConfig = new RequestConfig();
@@ -111,7 +111,7 @@ public class Volley {
     /**
      * 参数的类型:FORM表单,或 JSON内容传递
      */
-    public Builder contentType(int contentType) {
+    public Builder contentType(ContentType contentType) {
       this.contentType = contentType;
       return this;
     }
@@ -119,8 +119,59 @@ public class Volley {
     /**
      * 请求回调,不需要可以为空
      */
-    public Builder callback(HttpCallback callback) {
-      this.callback = callback;
+    public Builder onPreStart(HttpCallback.PreStart callback) {
+      if (callback == null) {
+        throw new IllegalStateException("the PreStartcallback is null");
+      } this.mPreStart = callback;
+      return this;
+    }
+
+    public Builder onPreHttp(HttpCallback.PreHttp callback) {
+      if (callback == null) {
+        throw new IllegalStateException("the PreHttpcallback is null");
+      } this.mPreHttp = callback;
+      return this;
+    }
+
+    public Builder onSuccessWithString(HttpCallback.SuccessWithString callback) {
+      if (callback == null) {
+        throw new IllegalStateException("the SuccessWithStringcallback is null");
+      } this.mSuccessWithString = callback;
+      return this;
+    }
+
+    public Builder onSuccessWithByte(HttpCallback.SuccessWithByte callback) {
+      if (callback == null) {
+        throw new IllegalStateException("the SuccessWithBytecallback is null");
+      } this.mSuccessWithByte = callback;
+      return this;
+    }
+
+    public Builder onSuccessInAsync(HttpCallback.SuccessInAsync callback) {
+      if (callback == null) {
+        throw new IllegalStateException("the SuccessInAsynccallback is null");
+      } this.mSuccessInAsync = callback;
+      return this;
+    }
+
+    public Builder onFailureWithMsg(HttpCallback.FailureWithMsg callback) {
+      if (callback == null) {
+        throw new IllegalStateException("the FailureWithMsgcallback is null");
+      } this.mFailureWithMsg = callback;
+      return this;
+    }
+
+    public Builder onFailureWithError(HttpCallback.FailureWithError callback) {
+      if (callback == null) {
+        throw new IllegalStateException("the FailureWithErrorcallback is null");
+      } this.mFailureWithError = callback;
+      return this;
+    }
+
+    public Builder onFinish(HttpCallback.Finish callback) {
+      if (callback == null) {
+        throw new IllegalStateException("the Finishcallback is null");
+      } this.mFinish = callback;
       return this;
     }
 
@@ -202,7 +253,7 @@ public class Volley {
      * 查看RequestConfig$Method
      * GET/POST/PUT/DELETE/HEAD/OPTIONS/TRACE/PATCH
      */
-    public Builder httpMethod(int httpMethod) {
+    public Builder httpMethod(Method httpMethod) {
       this.httpConfig.mMethod = httpMethod;
       if (httpMethod == Method.POST) {
         this.httpConfig.mShouldCache = false;
@@ -260,9 +311,13 @@ public class Volley {
         }
 
         if (contentType == ContentType.JSON) {
-          request = new JsonRequest(httpConfig, params, callback);
+          request =
+              new JsonRequest(httpConfig, params, mPreHttp, mSuccessWithString, mSuccessWithByte,
+                  mSuccessInAsync, mFailureWithMsg, mFailureWithError, mFinish);
         } else {
-          request = new FormRequest(httpConfig, params, callback);
+          request =
+              new FormRequest(httpConfig, params, mPreHttp, mSuccessWithString, mSuccessWithByte,
+                  mSuccessInAsync, mFailureWithMsg, mFailureWithError, mFinish);
         }
 
         request.setTag(httpConfig.mTag);
@@ -272,8 +327,8 @@ public class Volley {
           throw new RuntimeException("Request url is empty");
         }
       }
-      if (callback != null) {
-        callback.onPreStart();
+      if (mPreStart != null) {
+        mPreStart.onPreStart();
       }
       return this;
     }
@@ -287,44 +342,12 @@ public class Volley {
     }
   }
 
-  public static void get(String url, HttpCallback callback) {
-    new Builder().url(url).callback(callback).doTask();
+  public static Builder get() {
+   return new Builder().httpMethod(Method.GET);
   }
 
-  public static void get(String url, HttpParams params, HttpCallback callback) {
-    new Builder().url(url).params(params).callback(callback).doTask();
-  }
-
-  public static void post(String url, HttpParams params, HttpCallback callback) {
-    new Builder().url(url).params(params).httpMethod(Method.POST).callback(callback).doTask();
-  }
-
-  public static void post(String url, HttpParams params, ProgressListener listener,
-      HttpCallback callback) {
-    new Builder().url(url)
-        .params(params)
-        .progressListener(listener)
-        .httpMethod(Method.POST)
-        .callback(callback)
-        .doTask();
-  }
-
-  public static void jsonGet(String url, HttpParams params, HttpCallback callback) {
-    new Builder().url(url)
-        .params(params)
-        .contentType(ContentType.JSON)
-        .httpMethod(Method.GET)
-        .callback(callback)
-        .doTask();
-  }
-
-  public static void jsonPost(String url, HttpParams params, HttpCallback callback) {
-    new Builder().url(url)
-        .params(params)
-        .contentType(ContentType.JSON)
-        .httpMethod(Method.POST)
-        .callback(callback)
-        .doTask();
+  public static Builder post() {
+    return new Builder().httpMethod(Method.POST);
   }
 
   /**

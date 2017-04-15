@@ -17,6 +17,7 @@ package com.weibo.library.http;
 
 import android.net.Uri;
 import android.text.TextUtils;
+import com.weibo.library.Volley;
 import com.weibo.library.client.HttpCallback;
 import com.weibo.library.client.ProgressListener;
 import com.weibo.library.client.RequestConfig;
@@ -34,309 +35,321 @@ import java.util.Map;
  */
 public abstract class Request<T> implements Comparable<Request<T>> {
 
-    private final RequestConfig mConfig;
+  private final RequestConfig mConfig;
 
-    public int mDefaultTrafficStatsTag; // 默认tag {@link TrafficStats}
-    public boolean mResponseDelivered = false; // 是否再次分发本次响应
-    public boolean mCanceled = false; // 是否取消本次请求
+  public int mDefaultTrafficStatsTag; // 默认tag {@link TrafficStats}
+  public boolean mResponseDelivered = false; // 是否再次分发本次响应
+  public boolean mCanceled = false; // 是否取消本次请求
 
-    public Object mTag;
-    public Integer mSequence;
+  public Object mTag;
+  public Integer mSequence;
+  protected HttpCallback.PreHttp mPreHttp;
+  protected HttpCallback.SuccessInAsync mSuccessInAsync;
+  protected HttpCallback.FailureWithMsg mFailureWithMsg;
+  protected HttpCallback.FailureWithError mFailureWithError;
+  protected HttpCallback.Finish mFinish;
+  protected ProgressListener mProgressListener;
+  protected RequestQueue mRequestQueue;
+  private ICache.Entry mCacheEntry = null;
 
-    protected final HttpCallback mCallback;
-    protected ProgressListener mProgressListener;
-    protected RequestQueue mRequestQueue;
-    private ICache.Entry mCacheEntry = null;
+  public Request(RequestConfig config, HttpCallback.PreHttp preHttp,
+      HttpCallback.SuccessInAsync successInAsync, HttpCallback.FailureWithMsg failureWithMsg,
+      HttpCallback.FailureWithError failureWithError, HttpCallback.Finish finish) {
+    mPreHttp = preHttp;
+    mSuccessInAsync = successInAsync;
+    mFailureWithMsg = failureWithMsg;
+    mFailureWithError = failureWithError;
+    mFinish = finish;
 
-    public Request(RequestConfig config, HttpCallback callback) {
-        if (config == null) {
-            config = new RequestConfig();
+    if (config == null) {
+      config = new RequestConfig();
+    }
+    mConfig = config;
+    mDefaultTrafficStatsTag = findDefaultTrafficStatsTag(config.mUrl);
+  }
+
+  /**
+   * Set listener for tracking download progress
+   *
+   * @param listener 进度监听
+   */
+  public void setOnProgressListener(ProgressListener listener) {
+    mProgressListener = listener;
+  }
+
+  public Volley.Method getMethod() {
+    return mConfig.mMethod;
+  }
+
+  public RequestConfig getConfig() {
+    return mConfig;
+  }
+
+  /**
+   * 设置tag，方便取消本次请求时能找到它
+   */
+  public Object getTag() {
+    return mTag;
+  }
+
+  public void setTag(Object tag) {
+    this.mTag = tag;
+  }
+
+  public HttpCallback.SuccessInAsync getSuccessInAsyncCallBack() {
+    return mSuccessInAsync;
+  }
+
+  /**
+   * @return A tag for use with {@link TrafficStats#setThreadStatsTag(int)}
+   */
+  public int getTrafficStatsTag() {
+    return mDefaultTrafficStatsTag;
+  }
+
+  /**
+   * @return The hashcode of the URL's host component, or 0 if there is none.
+   */
+  private static int findDefaultTrafficStatsTag(String url) {
+    if (!TextUtils.isEmpty(url)) {
+      Uri uri = Uri.parse(url);
+      if (uri != null) {
+        String host = uri.getHost();
+        if (host != null) {
+          return host.hashCode();
         }
-        mConfig = config;
-        mCallback = callback;
-        mDefaultTrafficStatsTag = findDefaultTrafficStatsTag(config.mUrl);
+      }
     }
+    return 0;
+  }
 
-    /**
-     * Set listener for tracking download progress
-     *
-     * @param listener 进度监听
-     */
-    public void setOnProgressListener(ProgressListener listener) {
-        mProgressListener = listener;
+  /**
+   * 通知请求队列，本次请求已经完成
+   */
+  public void finish(String log) {
+    if (mRequestQueue != null) {
+      mRequestQueue.finish(this);
     }
+  }
 
-    public int getMethod() {
-        return mConfig.mMethod;
+  Request<?> setRequestQueue(RequestQueue requestQueue) {
+    mRequestQueue = requestQueue;
+    return this;
+  }
+
+  public final int getSequence() {
+    if (mSequence == null) {
+      throw new IllegalStateException("getSequence called before setSequence");
     }
+    return mSequence;
+  }
 
-    public RequestConfig getConfig() {
-        return mConfig;
+  void setSequence(int sequence) {
+    this.mSequence = sequence;
+  }
+
+  public String getUrl() {
+    return mConfig.mUrl;
+  }
+
+  public abstract String getCacheKey();
+
+  Request<?> setCacheEntry(ICache.Entry entry) {
+    mCacheEntry = entry;
+    return this;
+  }
+
+  public ICache.Entry getCacheEntry() {
+    return mCacheEntry;
+  }
+
+  public void cancel() {
+    mCanceled = true;
+  }
+
+  public boolean isCanceled() {
+    return mCanceled;
+  }
+
+  public ArrayList<HttpParamsEntry> getParams() {
+    return null;
+  }
+
+  public ArrayList<HttpParamsEntry> getHeaders() {
+    return new ArrayList<>();
+  }
+
+  protected String getParamsEncoding() {
+    return mConfig.mEncoding;
+  }
+
+  public String getBodyContentType() {
+    return "application/x-www-form-urlencoded; charset=" + getParamsEncoding();
+  }
+
+  /**
+   * 返回Http请求的body
+   */
+  public byte[] getBody() {
+    ArrayList<HttpParamsEntry> params = getParams();
+    if (params != null && params.size() > 0) {
+      return encodeParameters(params, getParamsEncoding());
     }
+    return null;
+  }
 
-    /**
-     * 设置tag，方便取消本次请求时能找到它
-     */
-    public Object getTag() {
-        return mTag;
+  /**
+   * 对中文参数做URL转码
+   */
+  private byte[] encodeParameters(ArrayList<HttpParamsEntry> params, String paramsEncoding) {
+    StringBuilder encodedParams = new StringBuilder();
+    try {
+      for (HttpParamsEntry entry : params) {
+        encodedParams.append(URLEncoder.encode(entry.k, paramsEncoding));
+        encodedParams.append('=');
+        encodedParams.append(URLEncoder.encode(entry.v, paramsEncoding));
+        encodedParams.append('&');
+      }
+      return encodedParams.toString().getBytes(paramsEncoding);
+    } catch (UnsupportedEncodingException uee) {
+      throw new RuntimeException("Encoding not supported: " + paramsEncoding, uee);
     }
+  }
 
-    public void setTag(Object tag) {
-        this.mTag = tag;
+  public boolean shouldCache() {
+    return mConfig.mShouldCache == null ? false : mConfig.mShouldCache;
+  }
+
+  /**
+   * 本次请求的优先级，四种
+   */
+  public enum Priority {
+    LOW, NORMAL, HIGH, IMMEDIATE
+  }
+
+  public Priority getPriority() {
+    return Priority.NORMAL;
+  }
+
+  public final int getTimeoutMs() {
+    if (mConfig.mTimeout == 0) {
+      return mConfig.mRetryPolicy.getCurrentTimeout();
+    } else {
+      return mConfig.mTimeout;
     }
+  }
 
-    public HttpCallback getCallback() {
-        return mCallback;
+  /**
+   * Returns the retry policy that should be used for this request.
+   */
+  public RetryPolicy getRetryPolicy() {
+    return mConfig.mRetryPolicy;
+  }
+
+  /**
+   * 标记为已经分发过的
+   */
+  public void markDelivered() {
+    mResponseDelivered = true;
+  }
+
+  /**
+   * 是否已经被分发过
+   */
+  public boolean hasHadResponseDelivered() {
+    return mResponseDelivered;
+  }
+
+  /**
+   * 将网络请求执行器(NetWork)返回的NetWork响应转换为Http响应
+   *
+   * @param response 网络请求执行器(NetWork)返回的NetWork响应
+   * @return 转换后的HttpRespond, or null in the case of an error
+   */
+  abstract public Response<T> parseNetworkResponse(NetworkResponse response);
+
+  /**
+   * 如果需要根据不同错误做不同的处理策略，可以在子类重写本方法
+   */
+  protected VolleyError parseNetworkError(VolleyError volleyError) {
+    return volleyError;
+  }
+
+  /**
+   * 将Http请求结果分发到主线程
+   *
+   * @param response {@link #parseNetworkResponse(NetworkResponse)}
+   */
+  abstract protected void deliverResponse(Map<String, String> headers, T response);
+
+  /**
+   * 响应Http请求异常的回调
+   *
+   * @param error 原因
+   */
+  public void deliverError(final VolleyError error) {
+    final int errorNo;
+    String strMsg;
+    if (error != null) {
+      if (error.networkResponse != null) {
+        errorNo = error.networkResponse.statusCode;
+      } else {
+        errorNo = -1;
+      }
+      strMsg = error.getMessage();
+    } else {
+      errorNo = -1;
+      strMsg = "unknow";
     }
-
-    /**
-     * @return A tag for use with {@link TrafficStats#setThreadStatsTag(int)}
-     */
-    public int getTrafficStatsTag() {
-        return mDefaultTrafficStatsTag;
+    if (mFailureWithError != null) {
+      mFailureWithError.onFailure(error);
     }
-
-    /**
-     * @return The hashcode of the URL's host component, or 0 if there is none.
-     */
-    private static int findDefaultTrafficStatsTag(String url) {
-        if (!TextUtils.isEmpty(url)) {
-            Uri uri = Uri.parse(url);
-            if (uri != null) {
-                String host = uri.getHost();
-                if (host != null) {
-                    return host.hashCode();
-                }
-            }
-        }
-        return 0;
+    if (mFailureWithMsg != null) {
+      mFailureWithMsg.onFailure(errorNo, strMsg);
     }
+  }
 
-    /**
-     * 通知请求队列，本次请求已经完成
-     */
-    public void finish(String log) {
-        if (mRequestQueue != null) {
-            mRequestQueue.finish(this);
-        }
+  public void deliverStartHttp() {
+    if (mPreHttp != null) {
+      mPreHttp.onPreHttp();
     }
+  }
 
-    Request<?> setRequestQueue(RequestQueue requestQueue) {
-        mRequestQueue = requestQueue;
-        return this;
+  /**
+   * Http请求完成(不论成功失败)
+   */
+  public void requestFinish() {
+    if (mFinish != null) {
+      mFinish.onFinish();
     }
+  }
 
-    public final int getSequence() {
-        if (mSequence == null) {
-            throw new IllegalStateException(
-                    "getSequence called before setSequence");
-        }
-        return mSequence;
-    }
+  /**
+   * 用于线程优先级排序
+   */
+  @Override public int compareTo(Request<T> other) {
+    Priority left = this.getPriority();
+    Priority right = other.getPriority();
+    return left == right ? mSequence - other.mSequence : right.ordinal() - left.ordinal();
+  }
 
-    void setSequence(int sequence) {
-        this.mSequence = sequence;
-    }
+  @Override public String toString() {
+    String trafficStatsTag = "0x" + Integer.toHexString(getTrafficStatsTag());
+    return (mCanceled ? "[X] " : "[ ] ")
+        + getUrl()
+        + " "
+        + trafficStatsTag
+        + " "
+        + getPriority()
+        + " "
+        + mSequence;
+  }
 
-    public String getUrl() {
-        return mConfig.mUrl;
-    }
+  public int getCacheTime() {
+    return mConfig.mCacheTime;
+  }
 
-    public abstract String getCacheKey();
-
-    Request<?> setCacheEntry(ICache.Entry entry) {
-        mCacheEntry = entry;
-        return this;
-    }
-
-    public ICache.Entry getCacheEntry() {
-        return mCacheEntry;
-    }
-
-    public void cancel() {
-        mCanceled = true;
-    }
-
-    public boolean isCanceled() {
-        return mCanceled;
-    }
-
-    public ArrayList<HttpParamsEntry> getParams() {
-        return null;
-    }
-
-    public ArrayList<HttpParamsEntry> getHeaders() {
-        return new ArrayList<>();
-    }
-
-    protected String getParamsEncoding() {
-        return mConfig.mEncoding;
-    }
-
-    public String getBodyContentType() {
-        return "application/x-www-form-urlencoded; charset=" + getParamsEncoding();
-    }
-
-    /**
-     * 返回Http请求的body
-     */
-    public byte[] getBody() {
-        ArrayList<HttpParamsEntry> params = getParams();
-        if (params != null && params.size() > 0) {
-            return encodeParameters(params, getParamsEncoding());
-        }
-        return null;
-    }
-
-    /**
-     * 对中文参数做URL转码
-     */
-    private byte[] encodeParameters(ArrayList<HttpParamsEntry> params,
-                                    String paramsEncoding) {
-        StringBuilder encodedParams = new StringBuilder();
-        try {
-            for (HttpParamsEntry entry : params) {
-                encodedParams.append(URLEncoder.encode(entry.k, paramsEncoding));
-                encodedParams.append('=');
-                encodedParams.append(URLEncoder.encode(entry.v, paramsEncoding));
-                encodedParams.append('&');
-            }
-            return encodedParams.toString().getBytes(paramsEncoding);
-        } catch (UnsupportedEncodingException uee) {
-            throw new RuntimeException("Encoding not supported: "
-                    + paramsEncoding, uee);
-        }
-    }
-
-    public boolean shouldCache() {
-        return mConfig.mShouldCache == null ? false : mConfig.mShouldCache;
-    }
-
-    /**
-     * 本次请求的优先级，四种
-     */
-    public enum Priority {
-        LOW, NORMAL, HIGH, IMMEDIATE
-    }
-
-    public Priority getPriority() {
-        return Priority.NORMAL;
-    }
-
-    public final int getTimeoutMs() {
-        if (mConfig.mTimeout == 0) {
-            return mConfig.mRetryPolicy.getCurrentTimeout();
-        } else {
-            return mConfig.mTimeout;
-        }
-    }
-
-    /**
-     * Returns the retry policy that should be used for this request.
-     */
-    public RetryPolicy getRetryPolicy() {
-        return mConfig.mRetryPolicy;
-    }
-
-    /**
-     * 标记为已经分发过的
-     */
-    public void markDelivered() {
-        mResponseDelivered = true;
-    }
-
-    /**
-     * 是否已经被分发过
-     */
-    public boolean hasHadResponseDelivered() {
-        return mResponseDelivered;
-    }
-
-    /**
-     * 将网络请求执行器(NetWork)返回的NetWork响应转换为Http响应
-     *
-     * @param response 网络请求执行器(NetWork)返回的NetWork响应
-     * @return 转换后的HttpRespond, or null in the case of an error
-     */
-    abstract public Response<T> parseNetworkResponse(NetworkResponse response);
-
-    /**
-     * 如果需要根据不同错误做不同的处理策略，可以在子类重写本方法
-     */
-    protected VolleyError parseNetworkError(VolleyError volleyError) {
-        return volleyError;
-    }
-
-    /**
-     * 将Http请求结果分发到主线程
-     *
-     * @param response {@link #parseNetworkResponse(NetworkResponse)}
-     */
-    abstract protected void deliverResponse(Map<String, String> headers, T response);
-
-    /**
-     * 响应Http请求异常的回调
-     *
-     * @param error 原因
-     */
-    public void deliverError(final VolleyError error) {
-        final int errorNo;
-        String strMsg;
-        if (error != null) {
-            if (error.networkResponse != null) {
-                errorNo = error.networkResponse.statusCode;
-            } else {
-                errorNo = -1;
-            }
-            strMsg = error.getMessage();
-        } else {
-            errorNo = -1;
-            strMsg = "unknow";
-        }
-        if (mCallback != null) {
-            mCallback.onFailure(errorNo, strMsg);
-            mCallback.onFailure(error);
-        }
-    }
-
-    public void deliverStartHttp() {
-        if (mCallback != null) {
-            mCallback.onPreHttp();
-        }
-    }
-
-    /**
-     * Http请求完成(不论成功失败)
-     */
-    public void requestFinish() {
-        if (mCallback != null) {
-            mCallback.onFinish();
-        }
-    }
-
-    /**
-     * 用于线程优先级排序
-     */
-    @Override
-    public int compareTo(Request<T> other) {
-        Priority left = this.getPriority();
-        Priority right = other.getPriority();
-        return left == right ? mSequence - other.mSequence : right
-                .ordinal() - left.ordinal();
-    }
-
-    @Override
-    public String toString() {
-        String trafficStatsTag = "0x" + Integer.toHexString(getTrafficStatsTag());
-        return (mCanceled ? "[X] " : "[ ] ") + getUrl() + " " + trafficStatsTag
-                + " " + getPriority() + " " + mSequence;
-    }
-
-    public int getCacheTime() {
-        return mConfig.mCacheTime;
-    }
-
-    public boolean getUseServerControl() {
-        return mConfig.mUseServerControl;
-    }
+  public boolean getUseServerControl() {
+    return mConfig.mUseServerControl;
+  }
 }

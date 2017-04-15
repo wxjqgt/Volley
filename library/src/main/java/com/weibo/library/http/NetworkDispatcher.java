@@ -20,6 +20,7 @@ import android.annotation.TargetApi;
 import android.net.TrafficStats;
 import android.os.Build;
 import android.os.Process;
+import com.weibo.library.client.HttpCallback;
 import com.weibo.library.interf.ICache;
 import com.weibo.library.interf.IDelivery;
 import com.weibo.library.interf.INetwork;
@@ -30,90 +31,90 @@ import java.util.concurrent.BlockingQueue;
  * 执行完成后分发执行结果到UI线程的回调并缓存结果到缓存器
  */
 public class NetworkDispatcher extends Thread {
-    private final BlockingQueue<Request<?>> mQueue; // 正在发生请求的队列
-    private final INetwork mNetwork; // 网络请求执行器
-    private final ICache mCache; // 缓存器
-    private final IDelivery mDelivery;
-    private volatile boolean mQuit = false; // 标记是否退出本线程
+  private final BlockingQueue<Request<?>> mQueue; // 正在发生请求的队列
+  private final INetwork mNetwork; // 网络请求执行器
+  private final ICache mCache; // 缓存器
+  private final IDelivery mDelivery;
+  private volatile boolean mQuit = false; // 标记是否退出本线程
 
-    public NetworkDispatcher(BlockingQueue<Request<?>> queue, INetwork network, ICache cache,
-                             IDelivery delivery) {
-        mQueue = queue;
-        mNetwork = network;
-        mCache = cache;
-        mDelivery = delivery;
+  public NetworkDispatcher(BlockingQueue<Request<?>> queue, INetwork network, ICache cache,
+      IDelivery delivery) {
+    mQueue = queue;
+    mNetwork = network;
+    mCache = cache;
+    mDelivery = delivery;
+  }
+
+  /**
+   * 强制退出本线程
+   */
+  public void quit() {
+    mQuit = true;
+    interrupt();
+  }
+
+  @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+  private void addTrafficStatsTag(Request<?> request) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+      TrafficStats.setThreadStatsTag(request.getTrafficStatsTag());
     }
+  }
 
-    /**
-     * 强制退出本线程
-     */
-    public void quit() {
-        mQuit = true;
-        interrupt();
-    }
-
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    private void addTrafficStatsTag(Request<?> request) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            TrafficStats.setThreadStatsTag(request.getTrafficStatsTag());
+  /**
+   * 阻塞态工作，不停的从队列中获取任务，直到退出。并把取出的request使用Network执行请求，然后NetWork返回一个NetWork响应
+   */
+  @Override public void run() {
+    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+    int stateCode = -1;
+    while (true) {
+      Request<?> request;
+      try {
+        request = mQueue.take();
+      } catch (InterruptedException e) {
+        if (mQuit) {
+          return;
+        } else {
+          continue;
         }
-    }
-
-    /**
-     * 阻塞态工作，不停的从队列中获取任务，直到退出。并把取出的request使用Network执行请求，然后NetWork返回一个NetWork响应
-     */
-    @Override
-    public void run() {
-        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-        int stateCode = -1;
-        while (true) {
-            Request<?> request;
-            try {
-                request = mQueue.take();
-            } catch (InterruptedException e) {
-                if (mQuit) {
-                    return;
-                } else {
-                    continue;
-                }
-            }
-            try {
-                if (request.isCanceled()) {
-                    request.finish("任务已经取消");
-                    continue;
-                }
-                mDelivery.postStartHttp(request);
-                addTrafficStatsTag(request);
-                NetworkResponse networkResponse = mNetwork.performRequest(request);
-                stateCode = networkResponse.statusCode;
-                // 如果这个响应已经被分发，则不会再次分发
-                if (networkResponse.notModified && request.hasHadResponseDelivered()) {
-                    request.finish("已经分发过本响应");
-                    continue;
-                }
-                Response<?> response = request.parseNetworkResponse(networkResponse);
-
-                if (request.shouldCache() && response.cacheEntry != null) {
-                    mCache.put(request.getCacheKey(), response.cacheEntry);
-                }
-                request.markDelivered();
-                //执行异步响应
-                if (networkResponse.data != null) {
-                    if (request.getCallback() != null) {
-                        request.getCallback().onSuccessInAsync(networkResponse.data);
-                    }
-                }
-                mDelivery.postResponse(request, response);
-            } catch (VolleyError volleyError) {
-                parseAndDeliverNetworkError(request, volleyError, stateCode);
-            } catch (Exception e) {
-                parseAndDeliverNetworkError(request, new VolleyError(e), stateCode);
-            }
+      }
+      try {
+        if (request.isCanceled()) {
+          request.finish("任务已经取消");
+          continue;
         }
-    }
+        mDelivery.postStartHttp(request);
+        addTrafficStatsTag(request);
+        NetworkResponse networkResponse = mNetwork.performRequest(request);
+        stateCode = networkResponse.statusCode;
+        // 如果这个响应已经被分发，则不会再次分发
+        if (networkResponse.notModified && request.hasHadResponseDelivered()) {
+          request.finish("已经分发过本响应");
+          continue;
+        }
+        Response<?> response = request.parseNetworkResponse(networkResponse);
 
-    private void parseAndDeliverNetworkError(Request<?> request, VolleyError error, int stateCode) {
-        error = request.parseNetworkError(error);
-        mDelivery.postError(request, error);
+        if (request.shouldCache() && response.cacheEntry != null) {
+          mCache.put(request.getCacheKey(), response.cacheEntry);
+        }
+        request.markDelivered();
+        //执行异步响应
+        if (networkResponse.data != null) {
+          HttpCallback.SuccessInAsync successInAsync = request.getSuccessInAsyncCallBack();
+          if (successInAsync != null) {
+            successInAsync.onSuccessInAsync(networkResponse.data);
+          }
+        }
+        mDelivery.postResponse(request, response);
+      } catch (VolleyError volleyError) {
+        parseAndDeliverNetworkError(request, volleyError, stateCode);
+      } catch (Exception e) {
+        parseAndDeliverNetworkError(request, new VolleyError(e), stateCode);
+      }
     }
+  }
+
+  private void parseAndDeliverNetworkError(Request<?> request, VolleyError error, int stateCode) {
+    error = request.parseNetworkError(error);
+    mDelivery.postError(request, error);
+  }
 }

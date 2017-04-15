@@ -95,8 +95,8 @@ public class CacheDispatcher extends Thread {
                 Response<?> response = request.parseNetworkResponse(new NetworkResponse(entry.data,
                         entry.responseHeaders));
                 sleep(request.getConfig().mDelayTime);
-                if (request.getCallback() != null) {
-                    request.getCallback().onSuccessInAsync(entry.data);
+                if (request.getSuccessInAsyncCallBack() != null) {
+                    request.getSuccessInAsyncCallBack().onSuccessInAsync(entry.data);
                 }
 
                 mDelivery.postResponse(request, response);

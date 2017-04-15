@@ -22,13 +22,14 @@ public class MainActivity extends AppCompatActivity {
     params.put("lat", "");
     params.put("format", "json");
     final long c = System.currentTimeMillis();
-    Volley.post(url, params, new HttpCallback() {
-      @Override public void onSuccess(String t) {
-        System.out.println("+++++++++++" + t);
-        Faxian faxian = gson.fromJson(t,Faxian.class);
-        System.out.println(faxian.toString());
-        System.out.println("time = " + (System.currentTimeMillis() - c));
-      }
-    });
+    Volley.post()
+        .url(url)
+        .params(params)
+        .onSuccessWithString(new HttpCallback.SuccessWithString() {
+            @Override public void onSuccess(String t) {
+              System.out.println("t = " + t);
+            }
+        })
+        .doTask();
   }
 }

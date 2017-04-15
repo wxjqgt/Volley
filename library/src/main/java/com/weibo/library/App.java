@@ -1,4 +1,4 @@
-package com.weibo.library.client;
+package com.weibo.library;
 
 import android.app.Application;
 
