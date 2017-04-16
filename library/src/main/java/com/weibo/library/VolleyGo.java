@@ -75,14 +75,7 @@ public class VolleyGo {
    */
   public static class Builder {
 
-    private HttpCallback.PreStart mPreStart;
-    private HttpCallback.PreHttp mPreHttp;
-    private HttpCallback.SuccessWithString mSuccessWithString;
-    private HttpCallback.SuccessWithByte mSuccessWithByte;
-    private HttpCallback.SuccessInAsync mSuccessInAsync;
-    private HttpCallback.FailureWithMsg mFailureWithMsg;
-    private HttpCallback.FailureWithError mFailureWithError;
-    private HttpCallback.Finish mFinish;
+    private HttpCallback callback;
     private HttpParams params;
     private ContentType contentType;
     private Request<?> request;
@@ -115,7 +108,6 @@ public class VolleyGo {
       return this;
     }
 
-
     public Builder addParam(String key, byte[] value) {
       checkParmsNotNull();
       this.params.put(key, value);
@@ -139,67 +131,11 @@ public class VolleyGo {
     /**
      * 请求回调,不需要可以为空
      */
-    public Builder onPreStart(HttpCallback.PreStart callback) {
+    public Builder callback(HttpCallback callback) {
       if (callback == null) {
-        throw new IllegalStateException("the PreStartcallback is null");
+        throw new IllegalStateException("the callback is null");
       }
-      this.mPreStart = callback;
-      return this;
-    }
-
-    public Builder onPreHttp(HttpCallback.PreHttp callback) {
-      if (callback == null) {
-        throw new IllegalStateException("the PreHttpcallback is null");
-      }
-      this.mPreHttp = callback;
-      return this;
-    }
-
-    public Builder onSuccessWithString(HttpCallback.SuccessWithString callback) {
-      if (callback == null) {
-        throw new IllegalStateException("the SuccessWithStringcallback is null");
-      }
-      this.mSuccessWithString = callback;
-      return this;
-    }
-
-    public Builder onSuccessWithByte(HttpCallback.SuccessWithByte callback) {
-      if (callback == null) {
-        throw new IllegalStateException("the SuccessWithBytecallback is null");
-      }
-      this.mSuccessWithByte = callback;
-      return this;
-    }
-
-    public Builder onSuccessInAsync(HttpCallback.SuccessInAsync callback) {
-      if (callback == null) {
-        throw new IllegalStateException("the SuccessInAsynccallback is null");
-      }
-      this.mSuccessInAsync = callback;
-      return this;
-    }
-
-    public Builder onFailureWithMsg(HttpCallback.FailureWithMsg callback) {
-      if (callback == null) {
-        throw new IllegalStateException("the FailureWithMsgcallback is null");
-      }
-      this.mFailureWithMsg = callback;
-      return this;
-    }
-
-    public Builder onFailureWithError(HttpCallback.FailureWithError callback) {
-      if (callback == null) {
-        throw new IllegalStateException("the FailureWithErrorcallback is null");
-      }
-      this.mFailureWithError = callback;
-      return this;
-    }
-
-    public Builder onFinish(HttpCallback.Finish callback) {
-      if (callback == null) {
-        throw new IllegalStateException("the Finishcallback is null");
-      }
-      this.mFinish = callback;
+      this.callback = callback;
       return this;
     }
 
@@ -341,13 +277,9 @@ public class VolleyGo {
         }
 
         if (contentType == ContentType.JSON) {
-          request =
-              new JsonRequest(httpConfig, params, mPreHttp, mSuccessWithString, mSuccessWithByte,
-                  mSuccessInAsync, mFailureWithMsg, mFailureWithError, mFinish);
+          request = new JsonRequest(httpConfig, params, callback);
         } else {
-          request =
-              new FormRequest(httpConfig, params, mPreHttp, mSuccessWithString, mSuccessWithByte,
-                  mSuccessInAsync, mFailureWithMsg, mFailureWithError, mFinish);
+          request = new FormRequest(httpConfig, params, callback);
         }
 
         request.setTag(httpConfig.mTag);
@@ -357,8 +289,8 @@ public class VolleyGo {
           throw new RuntimeException("Request url is empty");
         }
       }
-      if (mPreStart != null) {
-        mPreStart.onPreStart();
+      if (callback != null) {
+        callback.onPreStart();
       }
       return this;
     }

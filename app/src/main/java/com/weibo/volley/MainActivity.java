@@ -15,8 +15,7 @@ import io.reactivex.schedulers.Schedulers;
 
 import static com.weibo.volley.FaxianApi.url;
 
-public class MainActivity extends AppCompatActivity implements HttpCallback.SuccessWithString {
-
+public class MainActivity extends AppCompatActivity {
   //source=android&lon=&lat=&format=json&
   Gson gson = new Gson();
 
@@ -54,25 +53,26 @@ public class MainActivity extends AppCompatActivity implements HttpCallback.Succ
     VolleyGo.post()
         .url(url + "v6/faxian_new2.php?format=json")
         .params(params)
-        .onSuccessWithString(this)
-        .doTask();
-  }
-
-  @Override public void onSuccess(String t) {
-    Observable.just(gson.fromJson(t, Faxian.class))
-        .flatMap(new Function<Faxian, ObservableSource<Faxian.FaxianListBean>>() {
-          @Override public ObservableSource<Faxian.FaxianListBean> apply(Faxian faxian)
-              throws Exception {
-            return Observable.fromIterable(faxian.getFaxian_list());
+        .callback(new HttpCallback() {
+          @Override public void onSuccess(String t) {
+            Observable.just(gson.fromJson(t, Faxian.class))
+                .flatMap(new Function<Faxian, ObservableSource<Faxian.FaxianListBean>>() {
+                  @Override public ObservableSource<Faxian.FaxianListBean> apply(Faxian faxian)
+                      throws Exception {
+                    return Observable.fromIterable(faxian.getFaxian_list());
+                  }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Faxian.FaxianListBean>() {
+                  @Override public void accept(Faxian.FaxianListBean faxianListBean)
+                      throws Exception {
+                    System.out.println(faxianListBean.getTitle());
+                  }
+                });
           }
         })
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(new Consumer<Faxian.FaxianListBean>() {
-          @Override public void accept(Faxian.FaxianListBean faxianListBean) throws Exception {
-            System.out.println(faxianListBean.getTitle());
-          }
-        });
+        .doTask();
   }
 }
 

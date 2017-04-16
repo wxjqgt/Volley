@@ -16,7 +16,7 @@
 
 package com.weibo.library.client;
 
-import com.weibo.library.VolleyGo;
+import com.weibo.library.constant.Method;
 import com.weibo.library.http.HttpHeaderParser;
 import com.weibo.library.http.NetworkResponse;
 import com.weibo.library.http.Request;
@@ -34,17 +34,9 @@ public class JsonRequest extends Request<byte[]> {
 
   private final String mRequestBody;
   private final HttpParams mParams;
-  private HttpCallback.SuccessWithString mSuccessWithString;
-  private HttpCallback.SuccessWithByte mSuccessWithByte;
 
-  public JsonRequest(RequestConfig config, HttpParams params, HttpCallback.PreHttp preHttp,
-      HttpCallback.SuccessWithString successWithString,
-      HttpCallback.SuccessWithByte successWithByte, HttpCallback.SuccessInAsync successInAsync,
-      HttpCallback.FailureWithMsg failureWithMsg, HttpCallback.FailureWithError failureWithError,
-      HttpCallback.Finish finish) {
-    super(config, preHttp, successInAsync, failureWithMsg, failureWithError, finish);
-    mSuccessWithString = successWithString;
-    mSuccessWithByte = successWithByte;
+  public JsonRequest(RequestConfig config, HttpParams params, HttpCallback callback) {
+    super(config, callback);
 
     mRequestBody = params.getJsonParams();
     mParams = params;
@@ -55,11 +47,8 @@ public class JsonRequest extends Request<byte[]> {
   }
 
   @Override protected void deliverResponse(Map<String, String> headers, byte[] response) {
-    if (mSuccessWithByte != null) {
-      mSuccessWithByte.onSuccess(headers, response);
-    }
-    if (mSuccessWithString != null) {
-      mSuccessWithString.onSuccess(new String(response));
+    if (mCallback != null) {
+      mCallback.onSuccess(headers, response);
     }
   }
 
@@ -73,7 +62,7 @@ public class JsonRequest extends Request<byte[]> {
   }
 
   @Override public String getCacheKey() {
-    if (getMethod() == VolleyGo.Method.POST) {
+    if (getMethod() == Method.POST) {
       return getUrl() + mParams.getJsonParams();
     } else {
       return getUrl();

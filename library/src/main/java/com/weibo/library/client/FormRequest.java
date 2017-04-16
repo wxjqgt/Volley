@@ -16,6 +16,7 @@
 package com.weibo.library.client;
 
 import com.weibo.library.VolleyGo;
+import com.weibo.library.constant.Method;
 import com.weibo.library.http.HttpHeaderParser;
 import com.weibo.library.http.NetworkResponse;
 import com.weibo.library.http.Request;
@@ -33,26 +34,17 @@ import java.util.Map;
  */
 public class FormRequest extends Request<byte[]> {
 
-  private final HttpParams mParams;
-  private HttpCallback.SuccessWithString mSuccessWithString;
-  private HttpCallback.SuccessWithByte mSuccessWithByte;
+  private HttpParams mParams;
 
-  public FormRequest(RequestConfig config, HttpParams params, HttpCallback.PreHttp preHttp,
-      HttpCallback.SuccessWithString successWithString,
-      HttpCallback.SuccessWithByte successWithByte, HttpCallback.SuccessInAsync successInAsync,
-      HttpCallback.FailureWithMsg failureWithMsg, HttpCallback.FailureWithError failureWithError,
-      HttpCallback.Finish finish) {
-    super(config, preHttp, successInAsync, failureWithMsg, failureWithError, finish);
-    mSuccessWithString = successWithString;
-    mSuccessWithByte = successWithByte;
+  public FormRequest(RequestConfig config, HttpParams params, HttpCallback callback) {
+    super(config, callback);
     if (params == null) {
-      params = new HttpParams();
+      this.mParams = new HttpParams();
     }
-    this.mParams = params;
   }
 
   @Override public String getCacheKey() {
-    if (getMethod() == VolleyGo.Method.POST) {
+    if (getMethod() == Method.POST) {
       return getUrl() + mParams.getUrlParams();
     } else {
       return getUrl();
@@ -92,11 +84,8 @@ public class FormRequest extends Request<byte[]> {
   }
 
   @Override protected void deliverResponse(Map<String, String> headers, final byte[] response) {
-    if (mSuccessWithByte != null) {
-      mSuccessWithByte.onSuccess(headers, response);
-    }
-    if (mSuccessWithString != null) {
-      mSuccessWithString.onSuccess(new String(response));
+    if (mCallback != null) {
+      mCallback.onSuccess(headers, response);
     }
   }
 

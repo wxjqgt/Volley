@@ -17,10 +17,10 @@ package com.weibo.library.http;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import com.weibo.library.VolleyGo;
 import com.weibo.library.client.HttpCallback;
 import com.weibo.library.client.ProgressListener;
 import com.weibo.library.client.RequestConfig;
+import com.weibo.library.constant.Method;
 import com.weibo.library.interf.ICache;
 import com.weibo.library.toolbox.HttpParamsEntry;
 import java.io.UnsupportedEncodingException;
@@ -43,24 +43,13 @@ public abstract class Request<T> implements Comparable<Request<T>> {
 
   public Object mTag;
   public Integer mSequence;
-  protected HttpCallback.PreHttp mPreHttp;
-  protected HttpCallback.SuccessInAsync mSuccessInAsync;
-  protected HttpCallback.FailureWithMsg mFailureWithMsg;
-  protected HttpCallback.FailureWithError mFailureWithError;
-  protected HttpCallback.Finish mFinish;
+  protected HttpCallback mCallback;
   protected ProgressListener mProgressListener;
   protected RequestQueue mRequestQueue;
   private ICache.Entry mCacheEntry = null;
 
-  public Request(RequestConfig config, HttpCallback.PreHttp preHttp,
-      HttpCallback.SuccessInAsync successInAsync, HttpCallback.FailureWithMsg failureWithMsg,
-      HttpCallback.FailureWithError failureWithError, HttpCallback.Finish finish) {
-    mPreHttp = preHttp;
-    mSuccessInAsync = successInAsync;
-    mFailureWithMsg = failureWithMsg;
-    mFailureWithError = failureWithError;
-    mFinish = finish;
-
+  public Request(RequestConfig config, HttpCallback callback) {
+    this.mCallback = callback;
     if (config == null) {
       config = new RequestConfig();
     }
@@ -77,7 +66,7 @@ public abstract class Request<T> implements Comparable<Request<T>> {
     mProgressListener = listener;
   }
 
-  public VolleyGo.Method getMethod() {
+  public Method getMethod() {
     return mConfig.mMethod;
   }
 
@@ -96,8 +85,8 @@ public abstract class Request<T> implements Comparable<Request<T>> {
     this.mTag = tag;
   }
 
-  public HttpCallback.SuccessInAsync getSuccessInAsyncCallBack() {
-    return mSuccessInAsync;
+  public HttpCallback getSuccessInAsyncCallBack() {
+    return mCallback;
   }
 
   /**
@@ -301,17 +290,15 @@ public abstract class Request<T> implements Comparable<Request<T>> {
       errorNo = -1;
       strMsg = "unknow";
     }
-    if (mFailureWithError != null) {
-      mFailureWithError.onFailure(error);
-    }
-    if (mFailureWithMsg != null) {
-      mFailureWithMsg.onFailure(errorNo, strMsg);
+    if (mCallback != null) {
+      mCallback.onFailure(error);
+      mCallback.onFailure(errorNo, strMsg);
     }
   }
 
   public void deliverStartHttp() {
-    if (mPreHttp != null) {
-      mPreHttp.onPreHttp();
+    if (mCallback != null) {
+      mCallback.onPreHttp();
     }
   }
 
@@ -319,8 +306,8 @@ public abstract class Request<T> implements Comparable<Request<T>> {
    * Http请求完成(不论成功失败)
    */
   public void requestFinish() {
-    if (mFinish != null) {
-      mFinish.onFinish();
+    if (mCallback != null) {
+      mCallback.onFinish();
     }
   }
 

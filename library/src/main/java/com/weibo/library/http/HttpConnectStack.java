@@ -60,18 +60,7 @@ public class HttpConnectStack implements IHttpStack {
 
   public HttpConnectStack(UrlRewriter urlRewriter, SSLSocketFactory sslSocketFactory) {
     mUrlRewriter = urlRewriter;
-    if (sslSocketFactory == null) {
-      try {
-        Class certificateUtilsClass = Class.forName("com.kymjs.okhttp3.CertificateUtils");
-        Method method = certificateUtilsClass.getDeclaredMethod("getDefaultSSLSocketFactory");
-        sslSocketFactory = (SSLSocketFactory) method.invoke(null);
-      } catch (Exception e) {
-      } finally {
-        mSslSocketFactory = sslSocketFactory;
-      }
-    } else {
-      mSslSocketFactory = sslSocketFactory;
-    }
+    mSslSocketFactory = sslSocketFactory;
   }
 
   @Override public URLHttpResponse performRequest(Request<?> request,
